@@ -15,6 +15,7 @@ public class ServerWorker extends Thread {
     private final Server server;
     private OutputStream outputStream;
     private User user;
+    private InputStream inputStream;
 
     public ServerWorker(Server server, Socket clientSocket) {
 
@@ -34,7 +35,7 @@ public class ServerWorker extends Thread {
 
     private void handleClientSocket(Socket clientSocket) throws InterruptedException, IOException {
 
-        InputStream inputStream=clientSocket.getInputStream();
+        this.inputStream=clientSocket.getInputStream();
         this.outputStream=clientSocket.getOutputStream();
 
         BufferedReader bufferedReader=new BufferedReader(new InputStreamReader(inputStream));
@@ -44,8 +45,8 @@ public class ServerWorker extends Thread {
 
             String[] token = StringUtils.split(line);
 
-            if(("Quit".equalsIgnoreCase(line.toLowerCase()))||("quit".equalsIgnoreCase(line.toLowerCase()))
-            ||("QUIT".equalsIgnoreCase(line.toUpperCase()))){
+            if("quit".equalsIgnoreCase(line.toLowerCase())){
+
                 break;
             }
 
@@ -72,7 +73,6 @@ public class ServerWorker extends Thread {
             clientOut.close();
          */
 
-        clientSocket.close();
     }
 
     private void handleUserLogin(OutputStream outputStream, BufferedReader bufferedReader) throws IOException {

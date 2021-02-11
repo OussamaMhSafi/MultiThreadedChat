@@ -41,7 +41,6 @@ public class Server extends Thread {
                 clientOut.write("Hello Client\n".getBytes());
                 clientOut.write(("Current time is: " + new Date().toString() + "\n").getBytes());
                 Thread.sleep(1000);
-                clientOut.close();
                 System.out.println("Accepted connection from " + clientSocket.getLocalAddress());
                 ServerWorker serverWorker = new ServerWorker(this,clientSocket);
                 workers.add(serverWorker);
