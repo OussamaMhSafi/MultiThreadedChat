@@ -4,109 +4,67 @@ import java.io.*;
 import java.net.Socket;
 import java.util.Scanner;
 
-public class Client extends Thread {
+// Java implementation for multithreaded chat client
+// Save file as Client.java
 
-    private static DataOutputStream out;
-    private static BufferedReader in;
-    private static Scanner sc;
-    private static Socket socket;
+import java.io.*;
+import java.net.*;
+import java.util.Scanner;
 
-    /*
-    static {
-        try {
-            socket = new Socket("localhost", 8818);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
+public class Client
+{
+    final static int ServerPort = 8818;
 
-    @Override
-    public void run() {
+    public static void main(String args[]) throws UnknownHostException, IOException
+    {
+        Scanner scn = new Scanner(System.in);
 
-        try {
-            out = new DataOutputStream(socket.getOutputStream());
-            in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            sc = new Scanner(System.in);
+        InetAddress ip = InetAddress.getByName("localhost");
 
-            String line = null;
+        // establish the connection
+        Socket s = new Socket("localhost", ServerPort);
 
-            while (true) {
+        DataInputStream dis = new DataInputStream(s.getInputStream());
+        DataOutputStream dos = new DataOutputStream(s.getOutputStream());
+        BufferedReader in = new BufferedReader(new InputStreamReader(dis));
 
-                line = sc.nextLine();
-                out.writeBytes(line);
-                Thread.sleep(100);
-            }
-        } catch(IOException | InterruptedException e){
-            e.printStackTrace();
-        }
-    }
+        Thread sendMessage = new Thread(new Runnable()
+        {
+            @Override
+            public void run() {
+                while (true) {
 
-     */
+                    String msg = scn.nextLine();
 
-    Client(){ }
-
-    public static void main(String[] args) throws IOException {
-
-        /*
-        Client client=new Client();
-        ClientMessage clientMessage=new ClientMessage();
-        client.start();
-        clientMessage.start();
-         */
-
-        try {
-            Socket socket = new Socket("localhost", 8818);
-            DataOutputStream out = new DataOutputStream(socket.getOutputStream());
-            BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            Scanner sc = new Scanner(System.in);
-
-            String input=null;
-            String line = null;
-
-            while (true) {
-
-                input = (sc.nextLine()+"\n");
-                out.writeBytes(input);
-                line=in.readLine();
-                System.out.println(line);
-
-            }
-        } catch(IOException e){
-            e.printStackTrace();
-        }
-    }
-
-    }
-
-
-    /*
-    public static class ClientMessage extends Thread {
-
-
-        @Override
-        public void run() {
-
-                try {
-                    out = new DataOutputStream(socket.getOutputStream());
-                    in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-
-                    String line;
-
-                    while (true) {
-
-                        while ((line = in.readLine()) != null) {
-
-                            Thread.sleep(100);
-                            System.out.println(line);
-                        }
+                    try {
+                        dos.writeUTF(msg);
+                    } catch (IOException e) {
+                        e.printStackTrace();
                     }
-
-                } catch (IOException | InterruptedException e) {
-                    e.printStackTrace();
                 }
-        }
+            }
+        });
+
+        Thread readMessage = new Thread(new Runnable()
+        {
+            @Override
+            public void run() {
+
+                while (true) {
+                    try {
+
+                        String msg = dis.readUTF();
+                        System.out.println(msg);
+                    } catch (IOException e) {
+
+                        e.printStackTrace();
+                    }
+                }
+            }
+        });
+
+        sendMessage.start();
+        readMessage.start();
+
     }
-
 }
-     */
-

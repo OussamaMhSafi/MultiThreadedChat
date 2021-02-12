@@ -7,106 +7,82 @@ import java.net.Socket;
 import java.nio.Buffer;
 import java.util.Date;
 import java.util.List;
+import java.util.Scanner;
+import java.util.StringTokenizer;
 
 
-public class ServerWorker extends Thread {
+public class ServerWorker extends Thread implements Runnable{
 
-    private final Socket clientSocket;
-    private final Server server;
-    private OutputStream outputStream;
-    private User user;
-    private InputStream inputStream;
+        Scanner scn = new Scanner(System.in);
+        private String name;
+        final DataInputStream dis;
+        final DataOutputStream dos;
+        Socket s;
+        boolean isloggedin;
 
-    public ServerWorker(Server server, Socket clientSocket) {
-
-        this.server=server;
-        this.clientSocket=clientSocket;
-    }
-
-    @Override public void run(){
-
-        try {
-            handleClientSocket(clientSocket);
-        } catch (InterruptedException | IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-
-    private void handleClientSocket(Socket clientSocket) throws InterruptedException, IOException {
-
-        this.inputStream=clientSocket.getInputStream();
-        this.outputStream=clientSocket.getOutputStream();
-
-        BufferedReader bufferedReader=new BufferedReader(new InputStreamReader(inputStream));
-        String line;
-
-        while((line=bufferedReader.readLine())!=null){
-
-            String[] token = StringUtils.split(line);
-
-            if("quit".equalsIgnoreCase(line.toLowerCase())){
-
-                break;
-            }
-
-            else if(line.equalsIgnoreCase("login")){
-
-                handleUserLogin(outputStream, bufferedReader);
-            }
-            else {
-                String message = "You typed: " + line + "\n";
-                outputStream.write(message.getBytes());
-
-
-            }
+        // constructor
+        public ServerWorker(Socket s, String name,
+                             DataInputStream dis, DataOutputStream dos) {
+            this.dis = dis;
+            this.dos = dos;
+            this.name = name;
+            this.s = s;
+            this.isloggedin=true;
         }
 
-        /*
-        clientSocket.getOutputStream();
-            OutputStream clientOut = clientSocket.getOutputStream();
-            clientOut.write("Hello Client\n".getBytes());
-            for(int i=0;i<10;i++) {
-                clientOut.write(("Current time is: " + new Date().toString() + "\n").getBytes());
-                Thread.sleep(1000);
+        @Override
+        public void run() {
+
+            for (ServerWorker w : Server.ar) {
+
+                if (w.isloggedin) {
+                    try {
+                        w.dos.writeUTF(w.name + " status: ONLINE");
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
             }
-            clientOut.close();
-         */
 
-    }
+            String received;
 
-    private void handleUserLogin(OutputStream outputStream, BufferedReader bufferedReader) throws IOException {
-        UserData userData=new UserData();
-        String request="Please enter your username: "+"\n";
-        outputStream.write(request.getBytes());
+            while (true)
+            {
+                try
+                {
+                    received = dis.readUTF();
 
-        String username=bufferedReader.readLine();
+                    System.out.println(received);
 
-        User user = new User(username);
-        userData.setUser(user);
-        String confirmMsg="User "+username+" created"+"\n";
-        outputStream.write(confirmMsg.getBytes());
-        List<ServerWorker> workerList=server.getWorkers();
+                    if(received.equals("logout")){
 
-        for(ServerWorker worker:workerList){
-            String onlineMsgOut="Online "+worker.getUser().getUsername();
-            send(onlineMsgOut);
+                        this.isloggedin=false;
+                        this.s.close();
+                        break;
+                    }
+
+                    StringTokenizer st = new StringTokenizer(received, "#");
+                    String MsgToSend = st.nextToken();
+                    //String recipient = st.nextToken();
+
+
+                    dos.writeUTF(this.name+" : "+MsgToSend);
+
+            } catch (IOException e) {
+
+                    e.printStackTrace();
+                }
+
+            }
+            try
+            {
+                // closing resources
+                this.dis.close();
+                this.dos.close();
+
+            }catch(IOException e){
+                e.printStackTrace();
+            }
         }
-
-
-        String onlineMsg="Online "+username+"\n";
-        for(ServerWorker worker:workerList){
-
-            worker.send(onlineMsg);
-        }
     }
-
-    private void send(String onlineMsg) throws IOException {
-
-        outputStream.write(onlineMsg.getBytes());
-    }
-
-    public User getUser() {
-        return user;
-    }
-}

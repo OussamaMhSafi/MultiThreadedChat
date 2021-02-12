@@ -7,49 +7,58 @@ import java.net.Socket;
 import java.util.ArrayList;
 import java.util.Date;
 
-public class Server extends Thread {
+// Java implementation of Server side
+// It contains two classes : Server and ClientHandler
+// Save file as Server.java
 
-    private final int serverPort;
-    private ArrayList<ServerWorker> workers=new ArrayList<>();
+import java.io.*;
+import java.util.*;
+import java.net.*;
 
-    public Server(int serverPort) {
-        this.serverPort=serverPort;
-    }
+// Server class
+public class Server
+{
 
-    public ArrayList<ServerWorker> getWorkers() {
-        return workers;
-    }
-
-    @Override
-    public void run() {
-
-        ServerSocket server = null;
-        try {
-            server = new ServerSocket(serverPort);
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-        System.out.println("Server up and running");
-        while (true) {
-
-            try {
+    static Vector<ServerWorker> ar = new Vector<>();
+    static int PORT=8818;
+    static int i = 0;
 
 
-                System.out.println("Accepting connection");
-                Socket clientSocket = server.accept();
-                OutputStream clientOut = clientSocket.getOutputStream();
-                clientOut.write("Hello Client\n".getBytes());
-                clientOut.write(("Current time is: " + new Date().toString() + "\n").getBytes());
-                Thread.sleep(1000);
-                System.out.println("Accepted connection from " + clientSocket.getLocalAddress());
-                ServerWorker serverWorker = new ServerWorker(this,clientSocket);
-                workers.add(serverWorker);
-                serverWorker.start();
-            }
-            catch(IOException | InterruptedException e){
-                e.printStackTrace();
-            }
+    public static void main(String[] args) throws IOException
+    {
+        // server is listening on port 1234
+        ServerSocket ss = new ServerSocket(PORT);
+        Socket s;
+        System.out.println("Server is up and running....");
+        // running infinite loop for getting
+        // client request
+        while (true)
+        {
+
+            // Accept the incoming request
+            s = ss.accept();
+
+            System.out.println("New client request received : " + s);
+
+            // obtain input and output streams
+            DataInputStream dis = new DataInputStream(s.getInputStream());
+            DataOutputStream dos = new DataOutputStream(s.getOutputStream());
+
+            System.out.println("Creating a new worker for client "+ s.getLocalAddress());
+
+            // Create a new handler object for handling this request.
+            ServerWorker worker = new ServerWorker(s,"Client " + i, dis, dos);
+
+            // Create a new Thread with this object.
+            Thread t = new Thread(worker);
+
+            System.out.println("Adding this client to active client list");
+
+            ar.add(worker);
+            t.start();
+            i++;
 
         }
     }
 }
+
