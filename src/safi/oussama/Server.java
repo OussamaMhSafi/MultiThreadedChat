@@ -19,7 +19,7 @@ import java.net.*;
 public class Server
 {
 
-    static Vector<ServerWorker> ar = new Vector<>();
+    static ArrayList<ServerWorker> ar = new ArrayList<>();
     static int PORT=8818;
     static int i = 0;
 

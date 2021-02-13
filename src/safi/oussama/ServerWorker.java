@@ -62,12 +62,13 @@ public class ServerWorker extends Thread implements Runnable{
                         break;
                     }
 
-                    StringTokenizer st = new StringTokenizer(received, "#");
-                    String MsgToSend = st.nextToken();
+                    //StringTokenizer st = new StringTokenizer(received, "#");
+                    String MsgToSend = received;
                     //String recipient = st.nextToken();
 
-
-                    dos.writeUTF(this.name+" : "+MsgToSend);
+                    for(ServerWorker sw:Server.ar) {
+                        sw.dos.writeUTF(this.name + " : " + MsgToSend);
+                    }
 
             } catch (IOException e) {
 
